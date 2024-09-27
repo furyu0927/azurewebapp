@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "webapp-sam-lab13/1.0.0": {
+        "runtime": {
+          "webapp-sam-lab13.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "webapp-sam-lab13/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
