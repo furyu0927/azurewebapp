@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat App</title>
+</head>
+<body>
+    <h1>Azure OpenAI チャット</h1>
+    <form method="post" action="/chat">
+        <input type="text" name="user_input" placeholder="質問を入力" required>
+        <button type="submit">送信</button>
+    </form>
+    <p>{{ response }}</p>
+</body>
+</html>
