@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, Response, session
 import openai
 import os
 from dotenv import load_dotenv
@@ -8,8 +8,9 @@ from functools import wraps
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev")  # セッション用
 
-# --- ベーシック認証の設定 ---
+# --- ベーシック認証 ---
 def check_auth(username, password):
     return username == os.environ.get("BASIC_USER") and password == os.environ.get("BASIC_PASS")
 
@@ -28,18 +29,19 @@ def requires_auth(f):
         return f(*args, **kwargs)
     return decorated
 
-# --- Azure OpenAI の設定 ---
+# --- Azure OpenAI 設定 ---
 openai.api_type = "azure"
 openai.api_version = "2025-01-01-preview"
-openai.azure_endpoint = os.environ.get("OPENAI_ENDPOINT")
+openai.api_base = os.environ.get("OPENAI_ENDPOINT")
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 DEPLOYMENT_NAME = os.environ.get("DEPLOYMENT_NAME", "gpt-5-chat-Mika")
 
-# --- ルートに認証を追加 ---
-@app.route("/")
+# --- ルート ---
+@app.route("/", methods=["GET"])
 @requires_auth
 def index():
-    return render_template("index.html", response="")
+    history = session.get("history", [])
+    return render_template("index.html", history=history)
 
 @app.route("/chat", methods=["POST"])
 @requires_auth
@@ -52,7 +54,20 @@ def chat():
     )
 
     reply = response.choices[0].message.content
-    return render_template("index.html", response=reply)
+
+    # セッションに履歴を保存
+    if "history" not in session:
+        session["history"] = []
+    session["history"].append({"user": user_input, "bot": reply})
+
+    return render_template("index.html", history=session["history"])
+
+# --- セッションリセット用（任意） ---
+@app.route("/reset")
+@requires_auth
+def reset():
+    session.pop("history", None)
+    return "チャット履歴をリセットしました。<a href='/'>戻る</a>"
 
 if __name__ == "__main__":
     app.run(debug=True)
