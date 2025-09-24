@@ -1,30 +1,53 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 import openai
-import os  # 追加
-from dotenv import load_dotenv  # ← 追加
+import os
+from dotenv import load_dotenv
+from functools import wraps
 
 # --- .env を読み込む ---
 load_dotenv()
 
 app = Flask(__name__)
 
+# --- ベーシック認証の設定 ---
+def check_auth(username, password):
+    return username == os.environ.get("BASIC_USER") and password == os.environ.get("BASIC_PASS")
+
+def authenticate():
+    return Response(
+        'ログインが必要です', 401,
+        {'WWW-Authenticate': 'Basic realm="Login Required"'}
+    )
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
+
 # --- Azure OpenAI の設定 ---
 openai.api_type = "azure"
 openai.api_version = "2025-01-01-preview"
-openai.azure_endpoint = os.environ.get("OPENAI_ENDPOINT")  # 環境変数から取得
-openai.api_key = os.environ.get("OPENAI_API_KEY")          # 環境変数から取得
-DEPLOYMENT_NAME = os.environ.get("DEPLOYMENT_NAME", "gpt-5-chat-Mika")  # デフォルト値付き
+openai.azure_endpoint = os.environ.get("OPENAI_ENDPOINT")
+openai.api_key = os.environ.get("OPENAI_API_KEY")
+DEPLOYMENT_NAME = os.environ.get("DEPLOYMENT_NAME", "gpt-5-chat-Mika")
 
+# --- ルートに認証を追加 ---
 @app.route("/")
+@requires_auth
 def index():
     return render_template("index.html", response="")
 
 @app.route("/chat", methods=["POST"])
+@requires_auth
 def chat():
     user_input = request.form["user_input"]
 
     response = openai.chat.completions.create(
-        model=DEPLOYMENT_NAME,  # デプロイ名
+        model=DEPLOYMENT_NAME,
         messages=[{"role": "user", "content": user_input}]
     )
 
