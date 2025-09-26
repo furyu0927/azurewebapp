@@ -2,74 +2,200 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Gpt-5-Chat</title>
+    <title>Chappy🐶</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f9f9f9;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f8;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
         }
         h1 {
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: #111;
+            margin: 20px 0;
             text-align: center;
         }
         .chat-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
+            width: 100%;
+            max-width: 700px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
         }
         .chat-history {
+            flex: 1;
             max-height: 500px;
             overflow-y: auto;
             margin-bottom: 20px;
+            scroll-behavior: smooth;
         }
         .message {
+            position: relative;
             margin: 10px 0;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 75%;
+            word-wrap: break-word;
+            white-space: pre-line;
+            font-size: 1rem;
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeIn 0.25s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
         }
         .bot {
-            background: #f1f8e9;
-            text-align: left;
+            background: #ffffff;
+            align-self: flex-start;
+            border: 1px solid #e1e1e1;
+        }
+        .bot::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -8px;
+            width: 0;
+            height: 0;
+            border-top: 10px solid #ffffff;
+            border-right: 10px solid transparent;
+        }
+        .user {
+            background: #daf1ff;
+            align-self: flex-end;
+        }
+        .user::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -8px;
+            width: 0;
+            height: 0;
+            border-top: 10px solid #daf1ff;
+            border-left: 10px solid transparent;
+        }
+        .typing {
+            font-style: italic;
+            color: #555;
+            background: #ffffff;
+            align-self: flex-start;
+            border: 1px solid #e1e1e1;
+        }
+        .typing::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -8px;
+            width: 0;
+            height: 0;
+            border-top: 10px solid #ffffff;
+            border-right: 10px solid transparent;
         }
         .input-box {
             display: flex;
+            gap: 10px;
         }
         .input-box input[type="text"] {
             flex: 1;
-            padding: 12px;
-            font-size: 16px;
+            padding: 12px 16px;
+            font-size: 1rem;
             border: 1px solid #ccc;
             border-radius: 8px;
+            outline: none;
+            transition: all 0.2s ease-in-out;
+        }
+        .input-box input[type="text"]:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 0 5px rgba(74,144,226,0.3);
         }
         .input-box button {
             padding: 12px 20px;
-            margin-left: 10px;
-            background: #0078d4;
+            background: #4a90e2;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
+            transition: all 0.2s ease-in-out;
         }
         .input-box button:hover {
-            background: #005a9e;
+            background: #357ab8;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
-    <h1>Gpt-5-Chat</h1>
+<div>
+    <h1>Chappy🐶</h1>
     <div class="chat-container">
-        <div class="chat-history">
+        <div class="chat-history" id="chat-history">
             {% if response %}
-                <div class="message bot"><strong>5CHAT:</strong> {{ response }}</div>
+                <div class="message bot">{{ response|replace('\n','<br>')|safe }}</div>
             {% endif %}
         </div>
-        <form method="post" action="/chat" class="input-box">
-            <input type="text" name="user_input" placeholder="質問を入力してください" required>
+        <form method="post" action="/chat" class="input-box" id="chat-form">
+            <input type="text" name="user_input" id="user-input" placeholder="質問を入力してください" required>
             <button type="submit">送信</button>
         </form>
     </div>
+</div>
+
+<script>
+    const form = document.getElementById("chat-form");
+    const historyDiv = document.getElementById("chat-history");
+
+    form.addEventListener("submit", async function(e){
+        e.preventDefault();
+        const inputField = document.getElementById("user-input");
+        const userText = inputField.value.trim();
+        if(!userText) return;
+
+        // ユーザーメッセージを追加
+        const userDiv = document.createElement("div");
+        userDiv.className = "message user";
+        userDiv.textContent = userText;
+        historyDiv.appendChild(userDiv);
+        historyDiv.scrollTop = historyDiv.scrollHeight;
+        inputField.value = "";
+
+        // AIの「入力中…」メッセージ
+        const typingDiv = document.createElement("div");
+        typingDiv.className = "message typing";
+        typingDiv.textContent = "Chappy🐶 が入力中…";
+        historyDiv.appendChild(typingDiv);
+        historyDiv.scrollTop = historyDiv.scrollHeight;
+
+        // フォームデータをPOST
+        const formData = new FormData();
+        formData.append("user_input", userText);
+        const response = await fetch("/chat", { method:"POST", body:formData });
+        const html = await response.text();
+
+        // AI応答を抽出
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const aiMessage = doc.querySelector(".chat-history .bot");
+        if(aiMessage){
+            // 「入力中…」を置き換え
+            typingDiv.replaceWith(aiMessage);
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        } else {
+            // エラー時は入力中を消す
+            typingDiv.remove();
+        }
+    });
+</script>
 </body>
 </html>
