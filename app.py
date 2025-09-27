@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request, jsonify, Response
 import openai
 import os
 from dotenv import load_dotenv
@@ -8,9 +8,6 @@ from functools import wraps
 load_dotenv()
 
 app = Flask(__name__)
-
-# --- 会話履歴 ---
-history = []
 
 # --- ベーシック認証 ---
 def check_auth(username, password):
@@ -38,30 +35,28 @@ openai.azure_endpoint = os.environ.get("OPENAI_ENDPOINT")
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 DEPLOYMENT_NAME = os.environ.get("DEPLOYMENT_NAME", "gpt-5-chat-Mika")
 
-# --- ルート ---
+# --- 会話履歴（簡易保持） ---
+chat_history = []
+
 @app.route("/")
 @requires_auth
 def index():
-    return render_template("index.html", history=history)
+    return render_template("index.html", chat_history=chat_history)
 
 @app.route("/chat", methods=["POST"])
 @requires_auth
 def chat():
     user_input = request.form["user_input"]
-    history.append({"role": "user", "content": user_input})
+    chat_history.append({"role": "user", "content": user_input})
 
     try:
         response = openai.chat.completions.create(
             model=DEPLOYMENT_NAME,
-            messages=history
+            messages=[{"role": m["role"], "content": m["content"]} for m in chat_history]
         )
         reply = response.choices[0].message.content
     except Exception as e:
         reply = f"エラーが発生しました: {e}"
 
-    history.append({"role": "assistant", "content": reply})
-    return render_template("index.html", history=history)
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    app.run(host="0.0.0.0", port=port)
+    chat_history.append({"role": "assistant", "content": reply})
+    return jsonify({"reply": reply})
