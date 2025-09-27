@@ -9,6 +9,9 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# --- 会話履歴 ---
+history = []
+
 # --- ベーシック認証 ---
 def check_auth(username, password):
     return username == os.environ.get("BASIC_USER") and password == os.environ.get("BASIC_PASS")
@@ -39,24 +42,26 @@ DEPLOYMENT_NAME = os.environ.get("DEPLOYMENT_NAME", "gpt-5-chat-Mika")
 @app.route("/")
 @requires_auth
 def index():
-    return render_template("index.html", response="")
+    return render_template("index.html", history=history)
 
 @app.route("/chat", methods=["POST"])
 @requires_auth
 def chat():
     user_input = request.form["user_input"]
+    history.append({"role": "user", "content": user_input})
+
     try:
         response = openai.chat.completions.create(
             model=DEPLOYMENT_NAME,
-            messages=[{"role": "user", "content": user_input}]
+            messages=history
         )
         reply = response.choices[0].message.content
     except Exception as e:
         reply = f"エラーが発生しました: {e}"
 
-    return render_template("index.html", response=reply)
+    history.append({"role": "assistant", "content": reply})
+    return render_template("index.html", history=history)
 
 if __name__ == "__main__":
-    # Azure Web App では 0.0.0.0:$PORT
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)
