@@ -6,18 +6,109 @@
 <title>Chappy🐶</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-/* --- 既存のCSSはそのまま --- */
-#clearBtn {
-    margin-top: 10px;
-    padding: 10px 16px;
-    background: #d6bfae;
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 20px;
+    background-color: #f9f5f0;
+}
+h1 {
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.8rem;
     color: #5a3e36;
+}
+.chat-container {
+    max-width: 800px;
+    width: 95%;
+    margin: 20px auto;
+    background: #fff0e6;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+.chat-history {
+    max-height: 500px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+.message {
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 10px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+.bot {
+    background: #e5d4c0;
+    text-align: left;
+}
+.user {
+    background: #ffe8d6;
+    text-align: right;
+}
+#typingIndicator {
+    font-style: italic;
+    color: #7a5c47;
+    margin: 5px 0;
+    display: none;
+}
+.input-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.input-box input[type="text"] {
+    flex: 1 1 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+.input-box button {
+    flex: 1 1 100%;
+    padding: 12px;
+    background: #b36b00;
+    color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-weight: 600;
 }
-#clearBtn:hover {
+.input-box button:hover {
+    background: #8c4e00;
+}
+@media(min-width: 500px){
+    .input-box input[type="text"] {
+        flex: 1 1 auto;
+        margin-bottom: 0;
+    }
+    .input-box button {
+        flex: 0 0 auto;
+        width: auto;
+    }
+}
+#scrollBottomBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #d6bfae;
+    color: #5a3e36;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+#scrollBottomBtn.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+#scrollBottomBtn:hover {
     background: #bfa183;
 }
 </style>
@@ -38,9 +129,8 @@
     <form id="chatForm" class="input-box">
         <input type="text" name="user_input" placeholder="質問を入力してください" required>
         <button type="submit">送信</button>
+        <button type="button" id="clearChat">消去</button>
     </form>
-    <!-- 履歴消去ボタン -->
-    <button id="clearBtn">履歴を消去</button>
 </div>
 
 <button id="scrollBottomBtn" title="下へ移動">🐶</button>
@@ -51,6 +141,7 @@ const scrollBtn = document.getElementById("scrollBottomBtn");
 const typingIndicator = document.getElementById("typingIndicator");
 const form = document.getElementById("chatForm");
 const input = form.querySelector("input");
+const clearBtn = document.getElementById("clearChat");
 
 // スクロールボタン表示
 chatHistory.addEventListener("scroll", () => {
@@ -64,12 +155,13 @@ scrollBtn.addEventListener("click", () => {
     chatHistory.scrollTop = chatHistory.scrollHeight;
 });
 
-// Ajax送信
+// Ajax送信（認証付き）
 form.addEventListener("submit", (e) => {
     e.preventDefault();
     const userText = input.value.trim();
     if (!userText) return;
 
+    // ユーザー発言を表示
     const userDiv = document.createElement("div");
     userDiv.className = "message user";
     userDiv.innerHTML = `<strong>🍎:</strong> ${userText}`;
@@ -77,8 +169,10 @@ form.addEventListener("submit", (e) => {
     chatHistory.scrollTop = chatHistory.scrollHeight;
     input.value = "";
 
+    // 入力中表示
     typingIndicator.style.display = "block";
 
+    // サーバーに非同期送信
     fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -88,10 +182,12 @@ form.addEventListener("submit", (e) => {
     .then(res => res.json())
     .then(data => {
         typingIndicator.style.display = "none";
+
         const botDiv = document.createElement("div");
         botDiv.className = "message bot";
-        botDiv.innerHTML = `<strong>🐶:</strong> ${data.reply}`;
+        botDiv.innerHTML = `<strong>Chappy🐶:</strong> ${data.reply}`;
         chatHistory.appendChild(botDiv);
+
         chatHistory.scrollTop = chatHistory.scrollHeight;
     })
     .catch(err => {
@@ -100,19 +196,9 @@ form.addEventListener("submit", (e) => {
     });
 });
 
-// 履歴消去
-document.getElementById("clearBtn").addEventListener("click", () => {
-    fetch("/clear", {
-        method: "POST",
-        credentials: "same-origin"
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === "cleared") {
-            chatHistory.innerHTML = "";
-        }
-    })
-    .catch(err => alert("履歴消去に失敗しました"));
+// チャット消去
+clearBtn.addEventListener("click", () => {
+    chatHistory.innerHTML = "";
 });
 
 // ページ読み込み時に最下部へ
