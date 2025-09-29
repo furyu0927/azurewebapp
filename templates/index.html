@@ -37,22 +37,17 @@ h1 {
     border-radius: 10px;
     word-wrap: break-word;
     white-space: pre-wrap;
+    max-width: 70%;
 }
-/* ボット */
 .bot {
     background: #e5d4c0;
     text-align: left;
     margin-right: auto;
-    margin-left: 0;
-    max-width: 70%;
 }
-/* ユーザー */
 .user {
     background: #ffe8d6;
-    text-align: left;       /* 文字は左揃え */
-    margin-left: auto;      /* 吹き出しを右寄せ */
-    margin-right: 0;
-    max-width: 70%;
+    text-align: left;
+    margin-left: auto;
 }
 #typingIndicator {
     font-style: italic;
@@ -137,6 +132,7 @@ h1 {
     <form id="chatForm" class="input-box">
         <input type="text" name="user_input" placeholder="質問を入力してください" required>
         <button type="submit">送信</button>
+        <button type="button" id="clearChat">消去</button>
     </form>
 </div>
 
@@ -148,6 +144,7 @@ const scrollBtn = document.getElementById("scrollBottomBtn");
 const typingIndicator = document.getElementById("typingIndicator");
 const form = document.getElementById("chatForm");
 const input = form.querySelector("input");
+const clearBtn = document.getElementById("clearChat");
 
 // スクロールボタン表示
 chatHistory.addEventListener("scroll", () => {
@@ -200,6 +197,11 @@ form.addEventListener("submit", (e) => {
         typingIndicator.style.display = "none";
         alert("通信エラーが発生しました");
     });
+});
+
+// チャット消去
+clearBtn.addEventListener("click", () => {
+    chatHistory.innerHTML = "";
 });
 
 // ページ読み込み時に最下部へ
