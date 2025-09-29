@@ -37,12 +37,10 @@ h1 {
     border-radius: 10px;
     word-wrap: break-word;
     white-space: pre-wrap;
-    max-width: 70%;
 }
 .bot {
     background: #e5d4c0;
     text-align: left;
-    margin-right: auto;
 }
 .user {
     background: #ffe8d6;
@@ -67,8 +65,14 @@ h1 {
     border: 1px solid #ccc;
     border-radius: 8px;
 }
-.input-box button {
-    flex: 1 1 100%;
+.input-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+.input-buttons button {
+    flex: 1 1 auto;
     padding: 12px;
     background: #b36b00;
     color: white;
@@ -76,7 +80,7 @@ h1 {
     border-radius: 8px;
     cursor: pointer;
 }
-.input-box button:hover {
+.input-buttons button:hover {
     background: #8c4e00;
 }
 @media(min-width: 500px){
@@ -84,7 +88,7 @@ h1 {
         flex: 1 1 auto;
         margin-bottom: 0;
     }
-    .input-box button {
+    .input-buttons button {
         flex: 0 0 auto;
         width: auto;
     }
@@ -131,8 +135,10 @@ h1 {
     <div id="typingIndicator">Chappy🐶が入力中…</div>
     <form id="chatForm" class="input-box">
         <input type="text" name="user_input" placeholder="質問を入力してください" required>
-        <button type="submit">送信</button>
-        <button type="button" id="clearChat">消去</button>
+        <div class="input-buttons">
+            <button type="submit">送信</button>
+            <button type="button" id="clearChat">消去</button>
+        </div>
     </form>
 </div>
 
