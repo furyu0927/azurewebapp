@@ -60,3 +60,11 @@ def chat():
 
     chat_history.append({"role": "assistant", "content": reply})
     return jsonify({"reply": reply})
+
+# --- 履歴クリア用 ---
+@app.route("/clear", methods=["POST"])
+@requires_auth
+def clear():
+    global chat_history
+    chat_history = []
+    return jsonify({"status": "cleared"})
